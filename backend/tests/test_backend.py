@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -79,8 +80,9 @@ def test_navigate_endpoint_end_to_end_with_location():
     assert len(data["escalation_matrix"]) == 4
 
 def test_authentication_and_user_history_flow():
+    email = f"citizen_{uuid.uuid4().hex[:6]}@example.com"
     reg_payload = {
-        "phone_or_email": "citizen99@example.com",
+        "phone_or_email": email,
         "password": "SecurePassword123!",
         "full_name": "Ramesh Kumar",
         "preferred_language": "hi"
@@ -94,7 +96,7 @@ def test_authentication_and_user_history_flow():
     headers = {"Authorization": f"Bearer {token}"}
     me_res = client.get("/api/v1/auth/me", headers=headers)
     assert me_res.status_code == 200
-    assert me_res.json()["phone_or_email"] == "citizen99@example.com"
+    assert me_res.json()["phone_or_email"] == email
 
     # Test navigate with authenticated user token to record history
     nav_payload = {
@@ -112,4 +114,48 @@ def test_authentication_and_user_history_flow():
     hist_data = hist_res.json()
     assert len(hist_data["grievances"]) >= 1
     assert len(hist_data["search_history"]) >= 1
+
+def test_grievance_note_and_discard_back_endpoints():
+    email = f"citizen_{uuid.uuid4().hex[:6]}@example.com"
+    reg_payload = {
+        "phone_or_email": email,
+        "password": "SecurePassword123!",
+        "full_name": "Anita Verma",
+        "preferred_language": "hi"
+    }
+    reg_res = client.post("/api/v1/auth/register", json=reg_payload)
+    token = reg_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Test /grievance/note
+    note_payload = {
+        "query_text": "पति दहेज के लिए मारपीट करता है",
+        "domain": "Domestic Violence & Matrimonial Distress",
+        "state": "Uttar Pradesh",
+        "district": "Varanasi",
+        "summary": "घरेलू हिंसा शिकायत",
+        "draft_letter": "TO: Mahila Police Station",
+        "jurisdiction": {"primary_authority": "Mahila Police Station"},
+        "action_plan": [{"step_number": 1, "timeline_days": "Day 0-15"}]
+    }
+    note_res = client.post("/api/v1/grievance/note", json=note_payload, headers=headers)
+    assert note_res.status_code == 200
+    assert note_res.json()["status"] == "success"
+
+    # Test /grievance/discard-back
+    discard_payload = {
+        "query_text": "साइबर फ्रॉड 1930 सहायता",
+        "domain": "Cyber Crime & Financial Fraud"
+    }
+    disc_res = client.post("/api/v1/grievance/discard-back", json=discard_payload, headers=headers)
+    assert disc_res.status_code == 200
+    assert disc_res.json()["status"] == "success"
+
+    # Fetch dashboard data
+    dash_res = client.get("/api/v1/user/dashboard-data", headers=headers)
+    assert dash_res.status_code == 200
+    dash_data = dash_res.json()
+    assert len(dash_data["filed_grievances"]) >= 1
+    assert len(dash_data["recent_searches"]) >= 2
+
 

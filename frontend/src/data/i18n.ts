@@ -57,6 +57,17 @@ export interface TranslationDictionary {
   viewDraftBtn: string;
   statusDrafted: string;
   logoutBtn: string;
+  searchProblemBtn: string;
+  filedComplaintsTab: string;
+  noteItBtn: string;
+  backBtn: string;
+  notedSuccessToast: string;
+  urgentEscalationText: string;
+  contactTeamBtn: string;
+  urgentModalTitle: string;
+  callNowBtn: string;
+  sendEmailBtn: string;
+  closeBtn: string;
   presets: Array<{
     category: string;
     query: string;
@@ -121,6 +132,17 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDictionary> = {
     viewDraftBtn: "ड्राफ्ट देखें",
     statusDrafted: "ड्राफ्ट तैयार",
     logoutBtn: "लॉगआउट",
+    searchProblemBtn: "अपनी समस्या खोजें",
+    filedComplaintsTab: "दर्ज की गई शिकायतें",
+    noteItBtn: "नोट करें",
+    backBtn: "पीछे जाएं",
+    notedSuccessToast: "शिकायत सफलतापूर्वक दर्ज और सुरक्षित कर ली गई है।",
+    urgentEscalationText: "यदि समय सीमा में समाधान न मिले या मामला अत्यंत गंभीर/आपातकालीन हो, तो हमारी सहायता टीम से तुरंत संपर्क करें।",
+    contactTeamBtn: "हमारी टीम से संपर्क करें",
+    urgentModalTitle: "तत्काल कानूनी एवं शिकायत सहायता",
+    callNowBtn: "अभी कॉल करें",
+    sendEmailBtn: "ईमेल भेजें",
+    closeBtn: "बंद करें",
     presets: [
       {
         category: "घरेलू हिंसा एवं प्रताड़ना",
@@ -206,6 +228,17 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDictionary> = {
     viewDraftBtn: "मसुदा पहा",
     statusDrafted: "मसुदा तयार",
     logoutBtn: "लॉगआउट",
+    searchProblemBtn: "तुमची समस्या शोधा",
+    filedComplaintsTab: "नोंदवलेल्या तक्रारी",
+    noteItBtn: "नोंदवा",
+    backBtn: "मागे जा",
+    notedSuccessToast: "तक्रार यशस्वीरित्या नोंदवली आणि जतन केली गेली आहे.",
+    urgentEscalationText: "वेळेत तोडगा न निघाल्यास किंवा तातडीची मदत हवी असल्यास, आमच्या सहाय्यता टीमशी त्वरित संपर्क साधा.",
+    contactTeamBtn: "आमच्या टीमशी संपर्क साधा",
+    urgentModalTitle: "तात्काळ कायदेशीर आणि तक्रार मदत",
+    callNowBtn: "आत्ताच कॉल करा",
+    sendEmailBtn: "ईमेल पाठवा",
+    closeBtn: "बंद करा",
     presets: [
       {
         category: "घरगुती हिंसाचार आणि छळ",
@@ -291,6 +324,17 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDictionary> = {
     viewDraftBtn: "View Draft",
     statusDrafted: "Drafted",
     logoutBtn: "Logout",
+    searchProblemBtn: "Search Your Problem",
+    filedComplaintsTab: "Filed Complaints (Noted)",
+    noteItBtn: "Note It",
+    backBtn: "Back",
+    notedSuccessToast: "Grievance noted and saved successfully.",
+    urgentEscalationText: "If no response is received within the timeline or you need urgent help, contact our legal support team immediately.",
+    contactTeamBtn: "Contact Our Team",
+    urgentModalTitle: "Urgent Legal & Grievance Support",
+    callNowBtn: "Call Now",
+    sendEmailBtn: "Send Email",
+    closeBtn: "Close",
     presets: [
       {
         category: "Domestic Violence & Cruelty",

@@ -59,6 +59,36 @@ def init_user_db():
         )
     """)
     
+    # Explicit Filed Grievances table (Noted complaints)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS filed_grievances (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            query_text TEXT NOT NULL,
+            domain TEXT NOT NULL,
+            state TEXT NOT NULL,
+            district TEXT NOT NULL,
+            summary TEXT NOT NULL,
+            draft_letter TEXT NOT NULL,
+            jurisdiction TEXT NOT NULL,
+            action_plan TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """)
+    
+    # Recent Searches table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS recent_searches (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            query_text TEXT NOT NULL,
+            domain TEXT,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -219,3 +249,105 @@ def get_user_search_history(user_id: str, limit: int = 50) -> List[Dict[str, Any
     conn.close()
     
     return [dict(row) for row in rows]
+
+def save_filed_grievance(
+    user_id: str,
+    query_text: str,
+    domain: str,
+    state: str,
+    district: str,
+    summary: str,
+    draft_letter: str,
+    jurisdiction: Dict[str, Any],
+    action_plan: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    init_user_db()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    fg_id = f"fg_{uuid.uuid4().hex[:10]}"
+    created_at = datetime.now(timezone.utc).isoformat()
+    
+    cursor.execute("""
+        INSERT INTO filed_grievances (
+            id, user_id, query_text, domain, state, district,
+            summary, draft_letter, jurisdiction, action_plan, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        fg_id, user_id, query_text, domain, state, district,
+        summary, draft_letter, json.dumps(jurisdiction), json.dumps(action_plan), created_at
+    ))
+    
+    conn.commit()
+    conn.close()
+    
+    return {
+        "id": fg_id,
+        "user_id": user_id,
+        "query_text": query_text,
+        "domain": domain,
+        "state": state,
+        "district": district,
+        "summary": summary,
+        "draft_letter": draft_letter,
+        "jurisdiction": jurisdiction,
+        "action_plan": action_plan,
+        "created_at": created_at
+    }
+
+def save_recent_search(user_id: str, query_text: str, domain: Optional[str] = None) -> Dict[str, Any]:
+    init_user_db()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    rs_id = f"rs_{uuid.uuid4().hex[:10]}"
+    created_at = datetime.now(timezone.utc).isoformat()
+    
+    cursor.execute("""
+        INSERT INTO recent_searches (id, user_id, query_text, domain, created_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (rs_id, user_id, query_text, domain, created_at))
+    
+    conn.commit()
+    conn.close()
+    
+    return {
+        "id": rs_id,
+        "user_id": user_id,
+        "query_text": query_text,
+        "domain": domain,
+        "created_at": created_at
+    }
+
+def get_dashboard_data(user_id: str) -> Dict[str, Any]:
+    init_user_db()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT * FROM filed_grievances WHERE user_id = ? ORDER BY created_at DESC LIMIT 50
+    """, (user_id,))
+    fg_rows = cursor.fetchall()
+    
+    cursor.execute("""
+        SELECT * FROM recent_searches WHERE user_id = ? ORDER BY created_at DESC LIMIT 50
+    """, (user_id,))
+    rs_rows = cursor.fetchall()
+    
+    conn.close()
+    
+    filed_grievances = []
+    for r in fg_rows:
+        item = dict(r)
+        item["jurisdiction"] = json.loads(item["jurisdiction"]) if item["jurisdiction"] else {}
+        item["action_plan"] = json.loads(item["action_plan"]) if item["action_plan"] else []
+        filed_grievances.append(item)
+        
+    recent_searches = [dict(r) for r in rs_rows]
+    
+    return {
+        "user_id": user_id,
+        "filed_grievances": filed_grievances,
+        "recent_searches": recent_searches
+    }
+

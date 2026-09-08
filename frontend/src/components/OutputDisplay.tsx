@@ -1,12 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { 
   ShieldCheck, AlertCircle, BookOpen, MapPin, ChevronRight, 
-  FileText, Copy, Download, Clock 
+  FileText, Copy, Download, Clock, PhoneCall, BookmarkCheck, ArrowLeft, Check 
 } from 'lucide-react';
 import { EmergencyBanner } from './EmergencyBanner';
+import { UrgentHelpModal } from './UrgentHelpModal';
 import { TRANSLATIONS, LanguageCode } from '../data/i18n';
+
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nyaypath-backend-wmnm.onrender.com';
 
 interface OutputDisplayProps {
   result: any;
@@ -14,10 +19,58 @@ interface OutputDisplayProps {
 }
 
 export const OutputDisplay: React.FC<OutputDisplayProps> = ({ result, language = 'hi' }) => {
+  const router = useRouter();
   const t = TRANSLATIONS[language] || TRANSLATIONS['hi'];
   const [copySuccess, setCopySuccess] = useState(false);
+  const [isUrgentModalOpen, setIsUrgentModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   if (!result) return null;
+
+  const handleNoteItClick = async () => {
+    setIsSaving(true);
+    try {
+      const d = result.draft_complaint_letter;
+      const draftFormatted = d ? `TO: ${d.to_authority}\nSUBJECT: ${d.subject}\n\nSTATEMENT OF FACTS:\n${d.statement_of_facts}` : '';
+      
+      await axios.post(`${API_BASE}/api/v1/grievance/note`, {
+        query_text: result.sanitized_query || 'Grievance Query',
+        domain: result.detected_domains ? result.detected_domains[0] : 'General Legal',
+        state: result.entities?.geographic_location?.state || 'National',
+        district: result.entities?.geographic_location?.district || 'General',
+        summary: result.plain_summary || '',
+        draft_letter: draftFormatted,
+        jurisdiction: result.jurisdictional_routing || {},
+        action_plan: result.escalation_matrix || []
+      });
+
+      setToastMessage(t.notedSuccessToast);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1200);
+    } catch (err) {
+      console.error('Failed to note grievance', err);
+      router.push('/dashboard');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleBackClick = async () => {
+    setIsSaving(true);
+    try {
+      await axios.post(`${API_BASE}/api/v1/grievance/discard-back`, {
+        query_text: result.sanitized_query || 'Grievance Query',
+        domain: result.detected_domains ? result.detected_domains[0] : 'General Legal'
+      });
+    } catch (err) {
+      console.error('Failed to save search history on back', err);
+    } finally {
+      setIsSaving(false);
+      router.push('/dashboard');
+    }
+  };
 
   const handleCopyDraft = () => {
     if (!result.draft_complaint_letter) return;
@@ -310,6 +363,71 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({ result, language =
           </div>
         </div>
       )}
+
+      {/* Urgent Escalation Support Banner */}
+      <div className="glass-panel rounded-2xl p-6 border border-rose-500/30 bg-gradient-to-r from-rose-950/40 via-nyay-dark to-nyay-dark flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3.5 max-w-2xl">
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400">
+            <PhoneCall className="w-6 h-6 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-slate-100">{t.contactTeamBtn}</h4>
+            <p className="text-xs text-slate-300 leading-relaxed">{t.urgentEscalationText}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsUrgentModalOpen(true)}
+          className="px-5 py-3 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white font-bold text-xs md:text-sm shadow-lg shadow-rose-500/20 flex items-center gap-2 transition-all"
+        >
+          <PhoneCall className="w-4 h-4" />
+          <span>{t.contactTeamBtn}</span>
+        </button>
+      </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-20 right-6 z-50 px-5 py-3 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-2xl flex items-center gap-2 animate-bounce">
+          <Check className="w-4 h-4" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Persistent Footer Action Buttons: "Note It" vs "Back" */}
+      <div className="sticky bottom-4 z-40 max-w-7xl mx-auto px-4 md:px-8">
+        <div className="glass-panel p-4 rounded-2xl border border-nyay-gold/40 bg-nyay-dark/95 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+          <div className="text-xs text-slate-300">
+            <span className="font-bold text-nyay-gold">Save or Return:</span> Record this grievance to your Citizen Dashboard or go back.
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleBackClick}
+              disabled={isSaving}
+              className="px-6 py-3 rounded-xl bg-nyay-card hover:bg-nyay-border border border-nyay-border text-slate-200 hover:text-white font-bold text-xs md:text-sm flex items-center gap-2 transition-all disabled:opacity-50"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{t.backBtn}</span>
+            </button>
+
+            <button
+              onClick={handleNoteItClick}
+              disabled={isSaving}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs md:text-sm flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50"
+            >
+              <BookmarkCheck className="w-4 h-4" />
+              <span>{isSaving ? 'Saving...' : t.noteItBtn}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Urgent Contact Support Popup Modal */}
+      <UrgentHelpModal
+        isOpen={isUrgentModalOpen}
+        onClose={() => setIsUrgentModalOpen(false)}
+        language={language}
+      />
     </div>
   );
 };

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.audit import init_db
 from app.core.db import init_user_db
-from app.api.routes import health, voice, classify, rag, generate, auth
+from app.api.routes import health, voice, classify, rag, generate, auth, grievance
 from app.rag.vectorstore import VectorStoreManager
 from app.rag.ingest_seed_data import seed_expanded_statutes
 
@@ -28,6 +28,7 @@ app.add_middleware(
 # Include Routers
 app.include_router(health.router, tags=["Health Check"])
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["User Authentication & History"])
+app.include_router(grievance.router, prefix=settings.API_V1_STR, tags=["Grievance Action & Dashboard"])
 app.include_router(voice.router, prefix=settings.API_V1_STR, tags=["Voice ASR Layer"])
 app.include_router(classify.router, prefix=settings.API_V1_STR, tags=["Domain Classifier & NER"])
 app.include_router(rag.router, prefix=settings.API_V1_STR, tags=["Knowledge Retrieval (RAG)"])

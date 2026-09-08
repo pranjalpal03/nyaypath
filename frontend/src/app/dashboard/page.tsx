@@ -58,11 +58,17 @@ export default function DashboardPage() {
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/api/v1/user/history`);
-      setGrievances(res.data.grievances || []);
-      setSearches(res.data.search_history || []);
+      const res = await axios.get(`${API_BASE}/api/v1/user/dashboard-data`);
+      setGrievances(res.data.filed_grievances || []);
+      setSearches(res.data.recent_searches || []);
     } catch (err) {
-      console.error('Failed to fetch user history', err);
+      try {
+        const fallbackRes = await axios.get(`${API_BASE}/api/v1/user/history`);
+        setGrievances(fallbackRes.data.grievances || []);
+        setSearches(fallbackRes.data.search_history || []);
+      } catch (e) {
+        console.error('Failed to fetch user history', e);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -168,6 +174,27 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 mt-8 flex-1 w-full space-y-6">
+        {/* Primary Action Card: Search Your Problem */}
+        <div className="glass-panel rounded-2xl p-6 md:p-8 border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-nyay-dark to-nyay-dark flex flex-wrap items-center justify-between gap-4 shadow-xl">
+          <div className="space-y-1 max-w-2xl">
+            <h2 className="text-xl md:text-2xl font-bold font-serif text-slate-100 flex items-center gap-2">
+              <Scale className="w-6 h-6 text-nyay-gold" />
+              <span>{t.describeProblemTitle}</span>
+            </h2>
+            <p className="text-xs md:text-sm text-slate-400">
+              {t.describeProblemSub}
+            </p>
+          </div>
+
+          <Link
+            href="/"
+            className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all transform hover:scale-[1.02]"
+          >
+            <Scale className="w-5 h-5" />
+            <span>{t.searchProblemBtn}</span>
+          </Link>
+        </div>
+
         {/* Navigation Tabs */}
         <div className="flex border-b border-nyay-border">
           <button
@@ -175,7 +202,7 @@ export default function DashboardPage() {
             className={`px-6 py-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all ${activeTab === 'complaints' ? 'border-nyay-gold text-nyay-gold font-bold' : 'border-transparent text-slate-400 hover:text-white'}`}
           >
             <FileText className="w-4 h-4" />
-            <span>{t.myComplaintsTab} ({grievances.length})</span>
+            <span>{t.filedComplaintsTab} ({grievances.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('searches')}
