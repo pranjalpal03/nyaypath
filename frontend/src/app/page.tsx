@@ -14,7 +14,7 @@ export default function Home() {
   const [result, setResult] = useState<any | null>(null);
 
   const t = TRANSLATIONS[language] || TRANSLATIONS['hi'];
-  const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+  const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nyaypath-backend-wmnm.onrender.com';
 
   const handleFormSubmit = async (payload: { query: string; language: LanguageCode; state: string; district: string }) => {
     setIsLoading(true);
