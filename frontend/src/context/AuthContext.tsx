@@ -16,7 +16,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phoneOrEmail: str, password?: string) => Promise<UserProfile>;
+  login: (phoneOrEmail: string, password?: string) => Promise<UserProfile>;
   register: (phoneOrEmail: string, password?: string, fullName?: string, preferredLang?: string) => Promise<UserProfile>;
   logout: () => void;
 }

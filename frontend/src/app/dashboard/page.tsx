@@ -26,7 +26,7 @@ interface GrievanceItem {
 
 interface SearchItem {
   id: string;
-  query_text: str;
+  query_text: string;
   matched_domain: string;
   created_at: string;
 }
