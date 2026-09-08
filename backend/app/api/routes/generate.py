@@ -1,9 +1,12 @@
-import uuid
 import time
-from fastapi import APIRouter, HTTPException
+import uuid
+from typing import Optional, Dict, Any
+from fastapi import APIRouter, HTTPException, Depends
 from app.schemas.grievance import GrievanceRequest, GrievanceResponse, NamedEntities, AuthorityRouting, DraftComplaintLetter, EscalationStep, EmergencySOS
 from app.core.security import PIISecurityService
 from app.core.audit import AuditLogger
+from app.core.db import save_grievance_record, save_search_query
+from app.core.auth_utils import get_optional_current_user
 from app.nlp.normalizer import TextNormalizer
 from app.nlp.classifier import DomainClassifier
 from app.nlp.ner import EntityExtractor
@@ -16,7 +19,7 @@ vectorstore_manager = VectorStoreManager()
 legal_retriever = LegalRetriever(vectorstore_manager)
 
 @router.post("/navigate", response_model=GrievanceResponse, summary="Process legal grievance end-to-end")
-async def navigate_grievance(req: GrievanceRequest):
+async def navigate_grievance(req: GrievanceRequest, current_user: Optional[Dict[str, Any]] = Depends(get_optional_current_user)):
     start_time = time.time()
     session_id = req.session_id or f"sess_{uuid.uuid4().hex[:8]}"
 
@@ -99,6 +102,30 @@ async def navigate_grievance(req: GrievanceRequest):
     ]
 
     emergency_sos_model = EmergencySOS(**emergency_sos_dict) if emergency_sos_dict else None
+
+    # Step 8: Per-User Persistent Record Storage
+    if current_user and "id" in current_user:
+        try:
+            save_search_query(
+                user_id=current_user["id"],
+                query_text=sanitized_text,
+                matched_domain=domains[0] if domains else "General"
+            )
+            draft_text_formatted = f"To: {draft_dict.get('to_authority')}\nSubject: {draft_dict.get('subject')}\n\n{draft_dict.get('statement_of_facts')}" if draft_dict else ""
+            save_grievance_record(
+                user_id=current_user["id"],
+                original_text=sanitized_text,
+                state_id=req.state or "National",
+                district_id=req.district or "General",
+                detected_domain=domains[0] if domains else "General Legal",
+                summary=gen_results.get("plain_summary", ""),
+                draft_letter=draft_text_formatted,
+                jurisdiction_routing=routing_dict,
+                escalation_matrix=gen_results.get("escalation_matrix", []),
+                status="Drafted"
+            )
+        except Exception as err:
+            print(f"[User History Error] Failed to persist user record: {err}")
 
     return GrievanceResponse(
         session_id=session_id,

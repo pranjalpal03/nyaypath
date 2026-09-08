@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Scale, Globe2 } from 'lucide-react';
+import Link from 'next/link';
+import { Scale, Globe2, User as UserIcon, LogIn, History } from 'lucide-react';
 import axios from 'axios';
 import { ComplaintForm } from '../components/ComplaintForm';
 import { OutputDisplay } from '../components/OutputDisplay';
 import { TRANSLATIONS, LanguageCode } from '../data/i18n';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+  const { user, isAuthenticated } = useAuth();
   const [language, setLanguage] = useState<LanguageCode>('hi');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -57,8 +60,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Language Selector */}
+          {/* Controls & Auth Section */}
           <div className="flex items-center gap-3">
+            {/* Language Selector */}
             <div className="flex items-center gap-1 bg-nyay-card border border-nyay-border rounded-xl p-1 text-sm">
               <Globe2 className="w-4 h-4 text-slate-400 ml-2" />
               <button
@@ -93,10 +97,24 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              {t.readyBadge}
-            </div>
+            {/* Auth / Dashboard Button */}
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className="px-3.5 py-1.5 rounded-xl bg-nyay-gold/20 hover:bg-nyay-gold text-nyay-gold hover:text-slate-950 border border-nyay-gold/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow"
+              >
+                <UserIcon className="w-3.5 h-3.5" />
+                <span className="max-w-[120px] truncate">{user?.full_name || user?.phone_or_email}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="px-3.5 py-1.5 rounded-xl bg-nyay-card hover:bg-nyay-border border border-nyay-border text-slate-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all"
+              >
+                <LogIn className="w-3.5 h-3.5 text-nyay-gold" />
+                <span>{t.loginBtn}</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>

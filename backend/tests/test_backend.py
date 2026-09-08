@@ -77,3 +77,39 @@ def test_navigate_endpoint_end_to_end_with_location():
     assert "District Varanasi" in data["jurisdictional_routing"]["primary_authority"]
     assert data["draft_complaint_letter"] is not None
     assert len(data["escalation_matrix"]) == 4
+
+def test_authentication_and_user_history_flow():
+    reg_payload = {
+        "phone_or_email": "citizen99@example.com",
+        "password": "SecurePassword123!",
+        "full_name": "Ramesh Kumar",
+        "preferred_language": "hi"
+    }
+    reg_res = client.post("/api/v1/auth/register", json=reg_payload)
+    assert reg_res.status_code == 200
+    token = reg_res.json()["access_token"]
+    assert token is not None
+
+    # Test /auth/me with Bearer token
+    headers = {"Authorization": f"Bearer {token}"}
+    me_res = client.get("/api/v1/auth/me", headers=headers)
+    assert me_res.status_code == 200
+    assert me_res.json()["phone_or_email"] == "citizen99@example.com"
+
+    # Test navigate with authenticated user token to record history
+    nav_payload = {
+        "query": "राशन कार्ड में नाम नहीं जोड़ा गया है",
+        "language": "hi",
+        "state": "Bihar",
+        "district": "Patna"
+    }
+    nav_res = client.post("/api/v1/navigate", json=nav_payload, headers=headers)
+    assert nav_res.status_code == 200
+
+    # Fetch user history
+    hist_res = client.get("/api/v1/user/history", headers=headers)
+    assert hist_res.status_code == 200
+    hist_data = hist_res.json()
+    assert len(hist_data["grievances"]) >= 1
+    assert len(hist_data["search_history"]) >= 1
+

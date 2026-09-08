@@ -40,6 +40,23 @@ export interface TranslationDictionary {
   escalationMatrixTitle: string;
   groundedReferencesTitle: string;
   similarityLabel: string;
+  loginTitle: string;
+  loginSubtitle: string;
+  registerTitle: string;
+  registerSubtitle: string;
+  phoneOrEmailLabel: string;
+  passwordLabel: string;
+  fullNameLabel: string;
+  loginBtn: string;
+  registerBtn: string;
+  noAccountText: string;
+  alreadyAccountText: string;
+  dashboardTitle: string;
+  myComplaintsTab: string;
+  recentSearchesTab: string;
+  viewDraftBtn: string;
+  statusDrafted: string;
+  logoutBtn: string;
   presets: Array<{
     category: string;
     query: string;
@@ -87,6 +104,23 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDictionary> = {
     escalationMatrixTitle: "चरण-दर-चरण समय-सीमा एवं अपील योजना",
     groundedReferencesTitle: "प्रामाणिक सांविधिक संदर्भ (RAG)",
     similarityLabel: "समानता",
+    loginTitle: "न्यायपथ में लॉगिन करें",
+    loginSubtitle: "अपनी दर्ज शिकायतों और इतिहास तक पहुँचने के लिए लॉगिन करें",
+    registerTitle: "नया खाता बनाएं",
+    registerSubtitle: "न्यायपथ नागरिक अधिकार मंच पर निःशुल्क पंजीकरण करें",
+    phoneOrEmailLabel: "मोबाइल नंबर / ईमेल आईडी",
+    passwordLabel: "पासवर्ड",
+    fullNameLabel: "पूरा नाम",
+    loginBtn: "लॉगिन करें",
+    registerBtn: "खाता बनाएं",
+    noAccountText: "खाता नहीं है?",
+    alreadyAccountText: "पहले से खाता है?",
+    dashboardTitle: "नागरिक डैशबोर्ड एवं इतिहास",
+    myComplaintsTab: "मेरी दर्ज शिकायतें",
+    recentSearchesTab: "हाल की खोज",
+    viewDraftBtn: "ड्राफ्ट देखें",
+    statusDrafted: "ड्राफ्ट तैयार",
+    logoutBtn: "लॉगआउट",
     presets: [
       {
         category: "घरेलू हिंसा एवं प्रताड़ना",
@@ -155,6 +189,23 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDictionary> = {
     escalationMatrixTitle: "टप्पा-दर-टप्पा मुदत आणि अपील योजना",
     groundedReferencesTitle: "अधिकृत कायदेशीर संदर्भ (RAG)",
     similarityLabel: "साम्य",
+    loginTitle: "न्यायपथ मध्ये लॉगिन करा",
+    loginSubtitle: "तुमच्या नोंदवलेल्या तक्रारी आणि इतिहास पाहण्यासाठी लॉगिन करा",
+    registerTitle: "नवीन खाते तयार करा",
+    registerSubtitle: "न्यायपथ नागरिक अधिकार मंचावर विनामूल्य नोंदणी करा",
+    phoneOrEmailLabel: "मोबाइल नंबर / ईमेल आयडी",
+    passwordLabel: "पासवर्ड",
+    fullNameLabel: "पूर्ण नाव",
+    loginBtn: "लॉगिन करा",
+    registerBtn: "खाते तयार करा",
+    noAccountText: "खाते नाही?",
+    alreadyAccountText: "आधीपासून खाते आहे?",
+    dashboardTitle: "नागरिक डॅशबोर्ड आणि इतिहास",
+    myComplaintsTab: "माझ्या नोंदवलेल्या तक्रारी",
+    recentSearchesTab: "नुकतीच शोधलेली माहिती",
+    viewDraftBtn: "मसुदा पहा",
+    statusDrafted: "मसुदा तयार",
+    logoutBtn: "लॉगआउट",
     presets: [
       {
         category: "घरगुती हिंसाचार आणि छळ",
@@ -223,6 +274,23 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDictionary> = {
     escalationMatrixTitle: "Step-by-Step Action Plan & Escalation Matrix",
     groundedReferencesTitle: "Grounded Statutory References (RAG)",
     similarityLabel: "Similarity",
+    loginTitle: "Login to NyayPath",
+    loginSubtitle: "Sign in to access your saved complaints and search history",
+    registerTitle: "Create an Account",
+    registerSubtitle: "Register for free on NyayPath Citizen Rights Platform",
+    phoneOrEmailLabel: "Mobile Number / Email ID",
+    passwordLabel: "Password",
+    fullNameLabel: "Full Name",
+    loginBtn: "Login",
+    registerBtn: "Register Account",
+    noAccountText: "Don't have an account?",
+    alreadyAccountText: "Already have an account?",
+    dashboardTitle: "Citizen Dashboard & History",
+    myComplaintsTab: "My Complaints",
+    recentSearchesTab: "Recent Searches",
+    viewDraftBtn: "View Draft",
+    statusDrafted: "Drafted",
+    logoutBtn: "Logout",
     presets: [
       {
         category: "Domestic Violence & Cruelty",

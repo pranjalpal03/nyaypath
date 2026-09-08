@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # SQLite Database for Audit Logging
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./nyaypath_audit.db")
     
+    # JWT Auth Configuration
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "nyaypath_super_secret_jwt_key_2026_citizen_empowerment")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    
     # CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

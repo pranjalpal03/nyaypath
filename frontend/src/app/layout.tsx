@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { AuthProvider } from '../context/AuthContext';
 
 export const metadata: Metadata = {
   title: 'NyayPath | Personalized Legal & Grievance Navigator',
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen flex flex-col bg-nyay-dark text-slate-100 antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
