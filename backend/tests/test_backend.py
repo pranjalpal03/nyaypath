@@ -1,0 +1,79 @@
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+from app.core.security import PIISecurityService
+from app.core.audit import init_db
+from app.nlp.normalizer import TextNormalizer
+from app.nlp.classifier import DomainClassifier
+from app.nlp.keyword_matcher import FastPathKeywordMatcher
+from app.nlp.ner import EntityExtractor
+
+client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def setup_database():
+    init_db()
+
+def test_health_endpoint():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "NyayPath" in data["app_name"]
+
+def test_pii_security_masking():
+    raw_text = "My Aadhaar is 5432 9876 1234 and phone is +91 9876543210. Email: test@gov.in, PAN: ABCDE1234F"
+    masked_text, redacted_items = PIISecurityService.mask_pii(raw_text)
+    
+    assert "[REDACTED_AADHAAR]" in masked_text
+    assert "[REDACTED_PHONE]" in masked_text
+    assert len(redacted_items) == 4
+
+def test_conversational_colloquial_domestic_violence_intent():
+    colloquial_query = "मेरा पति मारता है और सास ससुर दहेज मांग रहे हैं।"
+    sos_payload, scores = FastPathKeywordMatcher.scan_emergency_and_domain(colloquial_query)
+    
+    assert sos_payload is not None
+    assert sos_payload["triggered"] is True
+    assert "Domestic Violence" in sos_payload["category"]
+
+def test_conversational_colloquial_cyber_fraud_intent():
+    cyber_query = "मेरे बैंक खाते से पैसे कट गए हैं ऑनलाइन फ्रॉड हुआ है।"
+    sos_payload, scores = FastPathKeywordMatcher.scan_emergency_and_domain(cyber_query)
+    
+    assert sos_payload is not None
+    assert sos_payload["triggered"] is True
+    assert "1930" in [h["number"] for h in sos_payload["helplines"]]
+
+def test_expanded_domain_classifier():
+    posh_query = "My boss at office is sexually harassing me and ICC internal complaints committee is ignoring it."
+    domains, confidence, routing, needs_clarification, questions, emergency_sos = DomainClassifier.classify_and_route(posh_query)
+    
+    assert "Workplace Sexual Harassment (POSH)" in domains
+    assert confidence >= 0.70
+    assert "Internal Complaints Committee" in routing["primary_authority"]
+
+def test_conversational_senior_citizens_maintenance_classifier():
+    senior_query = "बेटा खाना नहीं दे रहा और जायदाद नाम करवा कर घर से निकाल दिया।"
+    domains, confidence, routing, needs_clarification, questions, emergency_sos = DomainClassifier.classify_and_route(senior_query)
+    
+    assert "Maintenance & Welfare of Senior Citizens" in domains
+    assert "Maintenance Tribunal" in routing["primary_authority"]
+
+def test_navigate_endpoint_end_to_end_with_location():
+    payload = {
+        "query": "मेरा पति मारता है और दहेज मांगता है। Aadhaar 5432 9876 1234.",
+        "language": "hi",
+        "state": "Uttar Pradesh",
+        "district": "Varanasi"
+    }
+    response = client.post("/api/v1/navigate", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert "session_id" in data
+    assert data["emergency_sos"] is not None
+    assert data["emergency_sos"]["triggered"] is True
+    assert "District Varanasi" in data["jurisdictional_routing"]["primary_authority"]
+    assert data["draft_complaint_letter"] is not None
+    assert len(data["escalation_matrix"]) == 4

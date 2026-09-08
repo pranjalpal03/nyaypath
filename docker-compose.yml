@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nyaypath-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+      - DEBUG=False
+      - EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      - CHROMA_PERSIST_DIRECTORY=/app/data/chroma_db
+      - DATABASE_URL=sqlite:////app/nyaypath_audit.db
+      - LLM_PROVIDER=mock
+    volumes:
+      - chroma_data:/app/data/chroma_db
+      - audit_db:/app/nyaypath_audit.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nyaypath-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  chroma_data:
+  audit_db:
